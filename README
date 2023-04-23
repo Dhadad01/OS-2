@@ -1,0 +1,62 @@
+david.hadad,roeey
+David Hadad - 314618448
+Eyal Royee - 318307915
+
+Submitted files:
+Makefile - the recipe for building the uthreads library.
+
+Assignment 2:
+Q1:
+	a. siglongjmp(env, value) - this function restores the state stored in env, 
+           sigsetjmp(env, savesigs)  -
+	b. sigsetjmp saves the current signal mask into the env struct iff savesigs != 0
+           if the signal mask was saved to the env struct then the siglongjmp restores the signal mask when called.
+
+Q2:
+Consider the following scenario:
+A program that needs to compute a heavy computable result, the result can be computed in a distributed way
+and in order to fully utilize the computer ...
+In addition the distributed computations requires access to the same data.
+Moreover the computations doesn't requires any IO access.
+
+In this case since the distributed workers should have a shared memory since all of them requires access to the same data.
+So we should use multiple threads instead of multiple processes.
+Since there is no use of IO for the distributed computations the threads won't use system calls during the computation.
+In such case user-level threads are preferable since they result in less overhead.
+
+For example of such task consider matrix multiplication:
+  1) different rows of the matrix product can be computed independently & therefor can be computed in parallel.
+  2) all different task (compute a single line of the matrix product) should have access to the same memory where result should be stored,
+     i.e. they require the result will be stored in shared memory.
+  3) there is no need for any additional data other then the 2 matrices required for the multiplication itself.
+
+Q3:
+Advantages:
+Robustness - if a thread crashes while handling a web page then the entire browser would crash as well,
+             however if each tab is handled via a different processes & a tab causes a process to crash then
+             only a single tab will be lost but the browser will still work.
+
+Disadvantages:
+Requires a lot more memory since processes don't share their memory by default.
+
+Q4:
+1) The Shotwell program was executed.
+2) When the `ps -A` was typed a hardware interrupt was triggered for each key pressed on the keyboard.
+3) The OS driver of the keyboard (with the interrupt handlers which he installed to the installed vector table)
+   infers what letters were typed. Then the OS makes the shell standard input readable with the typed letters.
+4) The shell reads from the standard input with the system call `read` (which triggers a software interrupt).
+5) The shell uses the `fork` & `exec` system calls (which triggers software interrupts) to execute the `ps -A` command.
+6) The `ps` command prints to the standard output with write system call (which triggers a software interrupt).
+   The Shotwell pid was 231828.
+7) The `ps` command finishes it's execution and the shell gets notified with a SIGCHLD signal which notifies the shell
+   that it's child process (`ps -A`) have terminated.
+8) Steps 2) to 5) are executed again with a slight difference - the typed letters are `kill 231828`.
+9) The `kill` command sends the signal SIGTERM (the default signal to send) to process 231828.
+10) Shotwell's signal handler for the signal SIGTERM is executed which terminates the process "peacefully".
+
+Q5:
+Real time is the actual time elapsed, whereas virtual time refers to a virtual clock whose ticks real-time difference is unpredictable
+However in virtual time the only thing that matters is the amount of elapsed ticks not the real-time difference.
+Examples:
+- real time: heart's pace maker, all that matters to the patient is that his heart beating properly.
+- virtual time: a turn based game like checkers where a single turn can last over an hour, however the game is agnostic to the turn duration.
