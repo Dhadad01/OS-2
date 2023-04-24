@@ -75,6 +75,9 @@ Scheduler::block(int tid)
       break;
     case RUNNING:
       m_threads[tid]->set_state(BLOCKED);
+      set_alarm();
+      m_quantums_passed += 1;
+      wakeup();
       this->schedule();
       break;
     case SLEEPING:
@@ -92,7 +95,7 @@ Scheduler::block(int tid)
 void
 Scheduler::sleep(int tid, int num_quantums)
 {
-  m_threads[tid]->sleep(num_quantums);
+  m_threads[tid]->sleep(this->m_quantums_passed + num_quantums + 1);
   m_threads[tid]->set_state(SLEEPING);
   m_sleeping.push_back(tid);
   m_threads[tid]->m_is_sleeping = true;
@@ -104,6 +107,7 @@ Scheduler::sleep(int tid, int num_quantums)
 
   set_alarm();
   m_quantums_passed += 1;
+  wakeup();
 }
 
 void
@@ -159,10 +163,43 @@ Scheduler::schedule(void)
 }
 
 void
-Scheduler::periodic_schedule(void)
+Scheduler::wakeup_no_update(void)
 {
   std::list<int> wakeup;
 
+  for (auto& sleeping : m_sleeping) {
+    if (m_threads[sleeping]->get_state() == SLEEPING) {
+      /*
+       * don't increament sleeping & blocked threads amount of passed
+       * quantums.
+       */
+      // m_threads[sleeping]->update_sleeping(1);
+      if (m_threads[sleeping]->get_remaining_sleep() ==
+          this->m_quantums_passed) {
+        wakeup.push_back(sleeping);
+      }
+    }
+  }
+
+  for (auto& wake : wakeup) {
+    m_sleeping.remove(wake);
+    m_ready.push_back(wake);
+    m_threads[wake]->set_state(READY);
+    m_threads[wake]->m_is_sleeping = false;
+  }
+}
+
+void
+Scheduler::wakeup(void)
+{
+  m_threads[m_running_tid]->update_quantums(1);
+
+  wakeup_no_update();
+}
+
+void
+Scheduler::periodic_schedule(void)
+{
   m_quantums_passed += 1;
 
   // std::cout << "Scheduler::periodic_schedule: total quantums passed is = "
@@ -175,27 +212,7 @@ Scheduler::periodic_schedule(void)
 #endif
   */
 
-  m_threads[m_running_tid]->update_quantums(1);
-
-  for (auto& sleeping : m_sleeping) {
-    if (m_threads[sleeping]->get_state() == SLEEPING) {
-      /*
-       * don't increament sleeping & blocked threads amount of passed
-       * quantums.
-       */
-      m_threads[sleeping]->update_sleeping(1);
-      if (m_threads[sleeping]->get_remaining_sleep() == 0) {
-        wakeup.push_back(sleeping);
-      }
-    }
-  }
-
-  for (auto& wake : wakeup) {
-    m_sleeping.remove(wake);
-    m_ready.push_back(wake);
-    m_threads[wake]->set_state(READY);
-    m_threads[wake]->m_is_sleeping = false;
-  }
+  wakeup();
 
   this->schedule();
 }
@@ -263,6 +280,9 @@ Scheduler::remove(int tid)
     /*
      * removing the running thread should trigger a scheduling decision.
      */
+    set_alarm();
+    m_quantums_passed += 1;
+    wakeup_no_update();
     this->schedule();
   }
 }

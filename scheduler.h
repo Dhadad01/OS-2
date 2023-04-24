@@ -49,6 +49,10 @@ public:
 
   int set_alarm(void);
 
+  void wakeup(void);
+
+  void wakeup_no_update(void);
+
 private:
   struct sigaction m_sa;
   struct itimerval m_timer;

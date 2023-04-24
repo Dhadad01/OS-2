@@ -73,7 +73,7 @@ ThreadControlBlock::update_quantums(int quantums)
 void
 ThreadControlBlock::update_sleeping(int quantums)
 {
-  m_sleep_quantums -= quantums;
+  m_sleep_quantums += quantums;
 }
 int
 ThreadControlBlock::get_remaining_sleep(void)

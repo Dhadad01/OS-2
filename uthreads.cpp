@@ -146,7 +146,8 @@ _uthread_spawn_unsafe(thread_entry_point entry_point, bool is_main)
   int tid;
 
   if (g_scheduler.get_nunmber_of_threads() >= MAX_THREAD_NUM) {
-    fprintf(stderr, "thread library error: %s\n", "quantum_usecs <= 0");
+    fprintf(
+      stderr, "thread library error: %s\n", "reached max number of threads");
     return -1;
   }
 
