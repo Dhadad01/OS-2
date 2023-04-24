@@ -181,7 +181,7 @@ Scheduler::wakeup_no_update(void)
        * quantums.
        */
       // m_threads[sleeping]->update_sleeping(1);
-      if (m_threads[sleeping]->get_remaining_sleep() ==
+      if (m_threads[sleeping]->get_remaining_sleep() <=
           this->m_quantums_passed) {
         wakeup.push_back(sleeping);
       }
