@@ -1,0 +1,3 @@
+[submodule "tests"]
+	path = tests
+	url = https://github.cs.huji.ac.il/dans/tests_os_ex2.git

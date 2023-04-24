@@ -9,7 +9,7 @@ ThreadControlBlock::ThreadControlBlock(uint8_t* stck, bool is_main)
   , m_state(READY)
   , m_stack(stck)
   , m_stack_alloc(false)
-  , m_quantums(1)
+  , m_quantums(0)
   , m_sleep_quantums(0)
   , m_entry_point(nullptr)
 {
@@ -17,6 +17,8 @@ ThreadControlBlock::ThreadControlBlock(uint8_t* stck, bool is_main)
   if (not is_main) {
     m_stack = new uint8_t[STACK_SIZE];
     m_stack_alloc = true;
+  } else {
+    m_quantums = 1;
   }
 }
 

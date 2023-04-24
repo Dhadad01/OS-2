@@ -115,6 +115,7 @@ Scheduler::set_passed_quantums(int initial)
 {
   m_quantums_passed = initial;
 }
+
 int
 Scheduler::get_passed_quantums(void) const
 {
@@ -129,6 +130,8 @@ Scheduler::switch_running_thread(void)
   get_running_thread()->set_state(RUNNING);
   get_running_thread()->reset_quantums_in_running();
   get_running_thread()->reset_usec_in_running();
+
+  m_threads[m_running_tid]->update_quantums(1);
 
   enable_signals();
   Dispatcher::resume(get_running_thread());
@@ -152,7 +155,11 @@ Scheduler::schedule(void)
      } else if (get_running_thread()->get_quantums_in_running() >=
                m_quantum_usecs) {
     */
-  } else if (get_running_thread()->get_usec_in_running() >= m_quantum_usecs) {
+  } else {
+    /*
+     * each schedule occurs after quantum_usecs micro-seconds and therefor the
+     * running thread should be switched to the next ready in line.
+     */
     tid = Dispatcher::save(get_running_thread());
     if (tid == 0) {
       m_ready.push_back(m_running_tid);
@@ -192,7 +199,7 @@ Scheduler::wakeup_no_update(void)
 void
 Scheduler::wakeup(void)
 {
-  m_threads[m_running_tid]->update_quantums(1);
+  // m_threads[m_running_tid]->update_quantums(1);
 
   wakeup_no_update();
 }
